@@ -8,17 +8,15 @@ from sklearn.model_selection import KFold
 from sklearn import metrics
 import pandas as pd
 
-np.random.seed(42)
-
 from src.kernel_definitions import clean_rho_fn, get_clean_matrix
 from src.dataset_config import define_wine_dataset, define_heart_dataset, define_BC_dataset, define_gaussian_dataset
 from results.results import boxplot_results, acc_margin_results
 from src.plotting_fns import plot_boxplots, dual_plot, acc_margin_plot
 from src.gen_margin_definitions import per_sample_margin, corrupt_labels
 
+np.random.seed(42)
 
-#example usage
-X_subset, y_subset, n, n_layers, embedding, _ = define_heart_dataset()
+X_subset, y_subset, n, n_layers, embedding, _ = define_heart_dataset() #example usage - Heart Disease Dataset
 
 #Initialise pipeline
 preprocessor = make_pipeline(
@@ -29,7 +27,6 @@ preprocessor = make_pipeline(
 
 C0 = 1 #Use default value
 
-"""Calculating the margin"""
 corruption_levels = [0.0, 0.10, 0.25, 0.5, 0.6, 0.75, 1.0]
 
 geometric_margins = []
@@ -41,6 +38,7 @@ for corrupt_lvl in corruption_levels:
     print(f"Testing corruption level: {corrupt_lvl}")
     accuracies = []
     
+    #Use 5-fold cross validation
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
     for fold, (train_idx, test_idx) in enumerate(kf.split(X_subset)):
@@ -64,17 +62,18 @@ for corrupt_lvl in corruption_levels:
         y_train = np.array(y_train_scaled).ravel()
         y_test = np.array(y_test_scaled).ravel()
 
+        #Get ideal kernels 
         clean_rho = clean_rho_fn(n=n, n_layers=n_layers, embedding=embedding)
         K_train = get_clean_matrix(A = X_train, B = X_train, fn_clean_rho = clean_rho)
         K_test = get_clean_matrix(A = X_test, B = X_train, fn_clean_rho = clean_rho)
             
-        #corrupt the training labels 
+        #corrupt a fraction of the training labels 
         y_corrupted = corrupt_labels(y_train, corrupt_lvl)
 
         #Train SVM with corrupted labels 
         svm = SVC(kernel="precomputed", C=C0).fit(K_train, y_corrupted)
             
-        #Calc geom margin
+        #Calculate and store (per-sample) geometric margins
         geom_margin = per_sample_margin(svm, K_train, y_train)
             
         for geom in zip(geom_margin):
@@ -84,18 +83,13 @@ for corrupt_lvl in corruption_levels:
         #Calculate test accuracy
         y_pred = svm.predict(K_test)
         test_acc = metrics.accuracy_score(y_test, y_pred)
-            
-        print(f"Minimum Geometric Margin: {np.min(geom_margin)}")
-        print(f"Accuracy: {test_acc}")
-
         accuracies.append(test_acc)
-        
    
     print(f"Accuracy: {np.mean(accuracies)} +/- {np.std(accuracies)}")
     mean_accuracies.append(np.mean(accuracies))
     std_accuracies.append(np.std(accuracies))
 
-#build the dataframe for seaborn
+#build the dataframe and save margin results to csv file
 df = pd.DataFrame(
     {
         'corruption_levels': all_corruption_levels,
@@ -107,7 +101,7 @@ df['corruption_levels'] = df['corruption_levels'].astype(str)
 df.to_csv("GeomMargins_Heart.csv", index=False)
 
 
-#Save results to a text file
+#Save accuracy results to a text file
 filename = "CorruptedLabelsAcc_Heart.txt"
     
 with open(filename, 'a') as file:

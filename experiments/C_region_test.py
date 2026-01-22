@@ -6,14 +6,13 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.pipeline import make_pipeline
 
-np.random.seed(42)
-
 from src.kernel_definitions import clean_rho_fn, get_clean_matrix, local_rho_fn, get_local_matrix, get_global_matrix
 from src.dataset_config import define_wine_dataset, define_heart_dataset, define_BC_dataset, define_gaussian_dataset
 from src.bounds_definitions import calc_margin, calc_C_bounds 
 
-#example usage
-X_subset, y_subset, n, n_layers, embedding, p_local_list = define_heart_dataset()
+np.random.seed(42)
+
+X_subset, y_subset, n, n_layers, embedding, p_local_list = define_heart_dataset() #example usage - Heart Disease Dataset
 
 #Split first then do preprocessing on train sets
 X_train, X_val, y_train, y_val = train_test_split(
@@ -46,11 +45,11 @@ num_samples = len(X_train)
 y_train = np.array(y_train_scaled).ravel()
 y_val = np.array(y_val_scaled).ravel()
    
-"""Computing the best C for the clean margin"""
-    
+#Computing the best C for the noiseless (ideal) margin 
 C_list = [0.1, 1, 10, 100, 1000]
-best_score = 0 #default values
-best_C = 1
+best_score = 0 #default value
+best_C = 1 #default value
+
 clean_rho = clean_rho_fn(n=n, n_layers=n_layers, embedding=embedding)
 clean_K = get_clean_matrix(A = X_train, B = X_train, fn_clean_rho = clean_rho)
 clean_K_val = get_clean_matrix(A = X_val, B = X_val, fn_clean_rho = clean_rho)
@@ -58,7 +57,7 @@ clean_K_val = get_clean_matrix(A = X_val, B = X_val, fn_clean_rho = clean_rho)
 for C_ideal in C_list:
     svm_clean = SVC(kernel = "precomputed", C=C_ideal)
         
-    """Use 5-fold CV to get the best C"""
+    #Use 5-fold CV score to get the best C
     scores = cross_val_score(svm_clean, clean_K, y_train, cv = 5)
     avg_score = np.mean(scores)
 
@@ -68,23 +67,24 @@ for C_ideal in C_list:
             
 print(f"Best C from CV: C = {best_C}")
 
-"""Computing clean margin"""
+#Compute clean margin using best_C
 svm_clean_ideal = SVC(kernel = "precomputed", C=best_C).fit(clean_K,y_train)
 clean_margin = calc_margin(svm_clean_ideal, clean_K, y_train)
 
 C_min_estimate = []
 C_max_bounds = []
 
-"""Computing the range of C values allowed for p=p_local"""
+#Computing the range of C values allowed for all p_local on list
 for p_local in p_local_list:
         
-    #Compute noisy margin estimate
+    #Compute noisy margin estimate using validation set
     local_rho = local_rho_fn(p_local, n, n_layers, embedding)
 
     noisy_K_val = get_local_matrix(A=X_val, B=X_val, fn_local_rho = local_rho)
     svm_noisy_val = SVC(kernel = "precomputed", C=best_C).fit(noisy_K_val, y_val)
     noisy_margin_val = calc_margin(svm_noisy_val,clean_K_val, y_val)
 
+    #Compute actual noisy margin for comparison
     noisy_K_train = get_local_matrix(A=X_train, B=X_train, fn_local_rho = local_rho)
     svm_noisy = SVC(kernel = "precomputed", C=best_C).fit(noisy_K_train, y_train)
     noisy_margin = calc_margin(svm_noisy,clean_K, y_train) # Margin evaluated using noisy dual variables in clean HS
@@ -93,7 +93,9 @@ for p_local in p_local_list:
     print(f"Noisy Margin = {noisy_margin}")
         
     C_min_est, C_max = calc_C_bounds(p_local, clean_margin, noisy_margin_val, n, n_layers)
-    if C_min_est < 0: C_min_est = 0 
+    
+    #Since C >= 0, set any negative C_min_est values to 0
+    if C_min_est < 0: C_min_est = 0  
 
     C_min_estimate.append(C_min_est)
     C_max_bounds.append(C_max)
@@ -101,7 +103,7 @@ for p_local in p_local_list:
 for C_min_est, C_max in zip(C_min_estimate, C_max_bounds):
     print(f"{C_min_est}, {C_max}")
 
-    #Find feasible region
+#Find feasible region
 C_low = C_min_estimate[0]
 C_high = C_max_bounds[0]
 

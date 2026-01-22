@@ -7,16 +7,16 @@ from sklearn import metrics
 from sklearn.model_selection import KFold
 from sklearn.pipeline import make_pipeline
 
-np.random.seed(42)
-
 from src.kernel_definitions import clean_rho_fn, get_clean_matrix, local_rho_fn, get_local_matrix, get_global_matrix
 from src.dataset_config import define_wine_dataset, define_heart_dataset
 from src.plotting_fns import plot_local_global
 from results.results import local_global_results
 
-#example usage
-X_subset, y_subset, n, n_layers, embedding, p_local_list = define_heart_dataset()
+np.random.seed(42)
 
+X_subset, y_subset, n, n_layers, embedding, p_local_list = define_heart_dataset() #example usage - Heart Disease Dataset
+
+#Initialise pipeline
 preprocessor = make_pipeline(
         StandardScaler(),
         PCA(n_components=n, random_state = 42),
@@ -29,10 +29,11 @@ std_local_acc = []
 mean_global_acc = []
 std_global_acc = []
 
-#Initialise pipeline
 for p_local in p_local_list:
     accuracy_loc = []
     accuracy_glob = []
+
+    #Perform 5-fold cross validation
     kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
     for fold, (train_idx, test_idx) in enumerate(kf.split(X_subset)):
@@ -55,26 +56,26 @@ for p_local in p_local_list:
         y_train = np.array(y_train_scaled).ravel()
         y_test = np.array(y_test_scaled).ravel()
 
-        """Computing the accuracy"""
+        #Get ideal kernel 
         clean_rho = clean_rho_fn(n=n, n_layers=n_layers, embedding=embedding)
-    
         clean_K_train = get_clean_matrix(A = X_train, B=X_train, fn_clean_rho = clean_rho)
         svm_clean = SVC(kernel = 'precomputed').fit(clean_K_train, y_train) #Use default C=1 value
 
-        """Local Noise"""
-        #Test using noisy kernel
+        #Get noisy kernel (local noise model)
         local_rho = local_rho_fn(p_local, n, n_layers, embedding)
-
         noisy_K_test_loc = get_local_matrix(A=X_test, B=X_train, fn_local_rho = local_rho)
+        
+        #Get test accuracy when using ideal QSVM model to predict on noisy data 
         predict_loc = svm_clean.predict(noisy_K_test_loc)
         acc_loc = metrics.accuracy_score(y_test, predict_loc)
-
         print(f"{p_local}: {acc_loc}")
         accuracy_loc.append(acc_loc)
 
-        """Global Noise"""
-        p_global = 1 - (1-p_local)**(n*n_layers) #to match survival prob
+        #Get noisy kernel (global noise model)
+        p_global = 1 - (1-p_local)**(n*n_layers) #to match survival probabilities of local and global models
         noisy_K_test_global = get_global_matrix(A=X_test, B=X_train, p=p_global, n=n, clean_rho = clean_rho)
+        
+        #Get test accuracy when using ideal QSVM model to predict on noisy data 
         predict_glob = svm_clean.predict(noisy_K_test_global)
         acc_glob = metrics.accuracy_score(y_test,predict_glob)
 
@@ -105,8 +106,9 @@ with open(filename, 'r') as file: #read
     content = file.read()
     print(content)
 
-
+"""
 #Uncomment to duplicate plots from the paper 
  
 heart_data, wine_2N1L, wine_3N1L = local_global_results()
 plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers)
+"""

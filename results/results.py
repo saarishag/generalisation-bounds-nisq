@@ -2,6 +2,10 @@ import pandas as pd
 
 def local_global_results():
     """   
+    Numerical values used to reproduce plots in the paper 
+    depicting the difference in accuracy achieved when using 
+    local vs global depolarising noise models
+
     Format: (p_local, mean_local_acc, std_local_acc, mean_global_acc, std_global_acc)
     """
 
@@ -54,6 +58,9 @@ def local_global_results():
 
 
 def margin_results():
+    """   
+    Noisy margin values obtained for various datasets at increasing levels of local depolarising noise
+    """
     p_local_list = [0,0.05,0.1,0.25,0.375,0.5,0.75]
     heart_margin = [0.16740862338544887, 0.13384389223996065,  0.10243140450410765, 0.04654498929105347, 0.020052512412971187, 0.006585789451575739, 0.001967244930069497]
     gaus_margin = [0.06662847412280092, 0.05231107104254029, 0.0415573801018878, 0.018685106062826834,  0.009406816664064824, 0.002904496998082465, 0.00014717672555800701]
@@ -68,6 +75,9 @@ def margin_results():
     return p_local_list,heart_margin, gaus_margin, bc_margin, wineL1_margin, wineL2_margin
 
 def upper_bound_results():
+    """   
+    Theoretical upper bound values computed for various datasets at increasing levels of local depolarising noise
+    """
     p_local_list = [0,0.05,0.1,0.25,0.375,0.5,0.75]
     heart_upper = [0.2525252331482871,0.19111364505760609,  0.15320560292066435, 0.08885765532687485, 0.05764552518279823, 0.035665876786126934, 0.008732609115352764]
     gaus_upper = [0.19897583540332298, 0.11022340065276134, 0.07991871989127752, 0.04201471563153883, 0.026569785250692302, 0.016258553563406497, 0.0039557268751735245]
@@ -82,6 +92,9 @@ def upper_bound_results():
 
 
 def lower_bound_results():
+    """   
+    Theoretical lower bound values computed for various datasets at increasing levels of local depolarising noise
+    """
     p_local_list = [0,0.01,0.05,0.07,0.1,0.135,0.15]
     heart_lower = [0.06376899337659676,0.05874348782195379, 0.04011149394629656,
                 0.031636053965482996, 0.01990867973217351,0.00763195610671373,0.0028066328209874515
@@ -103,19 +116,19 @@ def lower_bound_results():
 
 def boxplot_results():
 
-    levels = [0, 0.5, 1.0]
+    levels = [0, 0.5, 1.0] #Corruption levels
 
     #HTRU2 Dataset
-
-    #Load the dataset
-    url = "data/GeomMargins_HTRU2.csv"
+    url = "data/GeomMargins_HTRU2.csv" #Load the dataset
     htru2 = pd.read_csv(url)
 
-    htru2_subset = htru2[htru2.iloc[:,0].isin(levels)]
+    #Only store the geometric margins for the specified corruption levels
+    htru2_subset = htru2[htru2.iloc[:,0].isin(levels)] 
 
     corr = htru2_subset.iloc[:,0]
     geom = htru2_subset.iloc[:,1]
 
+    #Store the results in a pandas DataFrame
     htru2_df = pd.DataFrame(
         {
             'corruption_levels': corr,
@@ -129,11 +142,13 @@ def boxplot_results():
     url = "data/GeomMargins_Wine.csv"
     wine = pd.read_csv(url)
 
+    #Store the geometric margins for the specified corruption levels
     wine_subset = wine[wine.iloc[:,0].isin(levels)]
     
     corr = wine_subset.iloc[:,0]
     geom = wine_subset.iloc[:,1]
 
+    #Store the results in a pandas DataFrame
     wine_df = pd.DataFrame(
         {
             'corruption_levels': corr,
@@ -147,11 +162,14 @@ def boxplot_results():
     url = "data/GeomMargins_Heart.csv"
     heart = pd.read_csv(url)
 
+    #Store the geometric margins for the specified corruption levels
     heart_subset = heart[heart.iloc[:,0].isin(levels)]
 
     corr = heart_subset.iloc[:,0]
     geom = heart_subset.iloc[:,1]
 
+
+    #Store the results in a pandas DataFrame
     heart_df = pd.DataFrame(
         {
             'corruption_levels': corr,
@@ -165,11 +183,13 @@ def boxplot_results():
     url = "data/GeomMargins_Gaus.csv"
     gaus = pd.read_csv(url)
 
+    #Store the geometric margins for the specified corruption levels
     gaus_subset = gaus[gaus.iloc[:,0].isin(levels)]
 
     corr = gaus_subset.iloc[:,0]
     geom = gaus_subset.iloc[:,1]
 
+    #Store the results in a pandas DataFrame
     gaus_df = pd.DataFrame(
         {
             'corruption_levels': corr,
@@ -182,6 +202,8 @@ def boxplot_results():
     return htru2_df, wine_df, heart_df, gaus_df
 
 def acc_margin_results(htru2_df, wine_df, heart_df, gaus_df):
+    """Mean accuracies with their standard deviations and median margins 
+    for increasing corruption levels for the various datasets"""
 
     htru2_acc = [0.967, 0.963, 0.96, 0.626, 0.047, 0.044, 0.033]
     htru2_std = [0.026, 0.018, 0.024, 0.325, 0.025, 0.016, 0.016]
@@ -224,3 +246,66 @@ def acc_margin_results(htru2_df, wine_df, heart_df, gaus_df):
 
     return htru2_acc, htru2_std, htru2_geom_margin, wine_acc, wine_std, wine_geom_margin, heart_acc, heart_std, heart_geom_margin, gaus_acc, gaus_std, gaus_geom_margin
 
+def ideal_kernel_BC():
+    """
+    Precomputed ideal kernel matrix used for computation of noisy margin on the hardware 
+    """
+    clean_K = [[ 1.00000000e+00 , 2.40631502e-01 , 2.39324899e-01 , 8.41975120e-01,
+    1.69525966e-01,  1.36183005e-01  ,8.88049881e-01,  1.75764986e-01,
+    4.08313452e-01,  5.18434371e-01,  4.59526108e-02,  9.90892739e-01],
+    [ 2.40631502e-01 , 1.00000000e+00 , 2.20366906e-02  ,2.05485738e-01,
+    2.58903472e-03 ,-6.93889390e-18  ,2.01105982e-01  ,1.87166935e-01,
+    8.32946703e-02 , 1.35259670e-01  ,3.35004602e-01  ,2.43751651e-01],
+    [ 2.39324899e-01  ,2.20366906e-02  ,1.00000000e+00  ,1.41975765e-01,
+    9.52804242e-01  ,8.86830401e-01  ,1.60730708e-01  ,8.97494693e-02,
+    7.76013451e-01  ,8.84242404e-01  ,2.01026791e-01  ,3.01487563e-01]
+    , [ 8.41975120e-01  ,2.05485738e-01  ,1.41975765e-01  ,1.00000000e+00,
+    8.68971897e-02  ,5.36260452e-02  ,9.94805039e-01  ,5.64798682e-02,
+    2.86792025e-01  ,2.97345803e-01  ,1.19382257e-01  ,8.29647103e-01]
+    ,[ 1.69525966e-01 , 2.58903472e-03  ,9.52804242e-01 , 8.68971897e-02,
+    1.00000000e+00  ,9.83999862e-01  ,1.03997133e-01  ,5.81588276e-02,
+    8.27253740e-01  ,7.97549080e-01  ,2.40922828e-01  ,2.25619405e-01]
+    ,[ 1.36183005e-01 ,-6.93889390e-18 , 8.86830401e-01  ,5.36260452e-02,
+    9.83999862e-01  ,1.00000000e+00  ,6.95989179e-02  ,4.04278883e-02,
+    8.08453509e-01  ,7.14889242e-01  ,2.48373223e-01  ,1.81904793e-01]
+    ,[ 8.88049881e-01  ,2.01105982e-01  ,1.60730708e-01 , 9.94805039e-01,
+    1.03997133e-01  ,6.95989179e-02  ,1.00000000e+00  ,7.81254558e-02,
+    3.28945601e-01  ,3.47665950e-01  ,9.01383875e-02  ,8.79489710e-01]
+    ,[ 1.75764986e-01  ,1.87166935e-01  ,8.97494693e-02  ,5.64798682e-02,
+    5.81588276e-02  ,4.04278883e-02  ,7.81254558e-02  ,1.00000000e+00,
+    1.56671341e-01  ,2.16532069e-01  ,3.19095662e-01 , 2.00683430e-01]
+    ,[ 4.08313452e-01  ,8.32946703e-02  ,7.76013451e-01  ,2.86792025e-01,
+    8.27253740e-01  ,8.08453509e-01  ,3.28945601e-01  ,1.56671341e-01,
+    1.00000000e+00  ,8.58021028e-01  ,1.38555624e-01  ,4.88413675e-01]
+    ,[ 5.18434371e-01  ,1.35259670e-01 , 8.84242404e-01  ,2.97345803e-01,
+    7.97549080e-01  ,7.14889242e-01  ,3.47665950e-01  ,2.16532069e-01,
+    8.58021028e-01  ,1.00000000e+00  ,8.54619611e-02 , 5.96468452e-01]
+    ,[ 4.59526108e-02 , 3.35004602e-01 , 2.01026791e-01 , 1.19382257e-01,
+    2.40922828e-01  ,2.48373223e-01  ,9.01383875e-02  ,3.19095662e-01,
+    1.38555624e-01  ,8.54619611e-02  ,1.00000000e+00  ,2.12658540e-02]
+    ,[ 9.90892739e-01 , 2.43751651e-01 , 3.01487563e-01 , 8.29647103e-01,
+    2.25619405e-01 , 1.81904793e-01  ,8.79489710e-01,  2.00683430e-01,
+    4.88413675e-01,  5.96468452e-01 , 2.12658540e-02 , 1.00000000e+00]]
+    return clean_K
+
+def ibm_results():
+    """Precomputed noisy margin computed from hardware"""
+    IBM_margin = 0.014923413361799495
+
+    return IBM_margin
+
+def upper_lower_bounds_BC():
+    """
+    Upper and lower bound values for varying levels of local noise 
+    accompanied by the actual value of the noisy margin at those noise levels
+    """
+    p_local_list_upper = [0,0.1,0.25,0.375,0.5,0.75]
+
+    noisy_margin_upper = [0.17235306085243102, 0.10905599093889606, 0.049313437735145994, 0.022074387133084957, 0.007739050459366973, 0.0002870983614291353]
+    upper_bound_arr = [0.2249391097255191, 0.1446960768906372, 0.08601225357125916, 0.05621727939127874, 0.03490001582640801, 0.00856204573753475]
+
+    p_local_list_lower = [0,0.01,0.05,0.07,0.1,0.135,0.15]
+    noisy_margin_lower = [0.17235306085243102, 0.16496127715948164, 0.13792834269639853, 0.12573278388097708, 0.10905599093889606, 0.09176149664347774, 0.08505248531977619]
+    lower_bound_arr = [0.030773715646036086, 0.028348501278877586, 0.019357051812802267, 0.015266964042335386, 0.009607554024692468, 0.003683038332815083, 0.0013544281598711566]
+
+    return p_local_list_upper, noisy_margin_upper, upper_bound_arr, p_local_list_lower, noisy_margin_lower, lower_bound_arr

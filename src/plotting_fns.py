@@ -6,26 +6,30 @@ import pandas as pd
 from scipy.stats import pearsonr
 
 def plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers):
-
+    """
+    Reproduces plots from the paper depicting the difference in test accuracy 
+    when using global vs local depolarising noise models for three datasets
+    """
     fig, (ax1,ax2,ax3)= plt.subplots(1,3, figsize=(30,10), sharex=True)
 
+    #Wine Dataset (2 qubits, 1 layer)
     data = wine_2N1L
     p_local = np.array([d[0] for d in data])
-    p_global = 1 - (1-p_local)**(n*n_layers) #to match survival prob
+    p_global = 1 - (1-p_local)**(n*n_layers) #formula used to equate survival probability of both models
+
     local_acc = np.array([d[1] for d in data])
     local_std = np.array([d[2] for d in data])
     global_acc = np.array([d[3] for d in data])
     global_std = np.array([d[4] for d in data])
 
     diff = global_acc - local_acc
-    diff_std = np.sqrt(local_std**2 + global_std**2) #sqrt(a^2 + b^2) check?
+    diff_std = np.sqrt(local_std**2 + global_std**2) #error(a-b) = sqrt(a^2 + b^2)
 
-    p_glob_idx = [0,1,2,4,6,8,10,11]
+    p_glob_idx = [0,1,2,4,6,8,10,11] #display selective values for p_global for visual purposes
 
     ax1.axhline(y=0, color = "gray", linestyle="--", linewidth=1.5, alpha=0.3)
     ax1.fill_between(p_local, diff-diff_std, diff+diff_std, alpha=0.1, color = 'blue')
     ax1.plot(p_local, diff, 'o-', color = "blue", linewidth=2, markersize=8, label="Wine Dataset (N=2,L=1)")
-    #ax1.set_xlabel('Local Depolarising Noise Probability', fontsize=12) #dual axis
     ax1.set_ylabel("Accuracy Difference", fontsize=22)
     ax1.grid(True)
     ax1.legend(fontsize=16)
@@ -34,7 +38,7 @@ def plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers):
     ax1_top.set_xticks(p_local[p_glob_idx])
     ax1_top.set_xticklabels([f"{p_global[i]:.2f}" for i in p_glob_idx])
 
-
+    #Heart Disease Dataset
     data = heart_data
     p_local = np.array([d[0] for d in data])
 
@@ -45,21 +49,22 @@ def plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers):
     global_std = np.array([d[4] for d in data])
 
     diff = global_acc - local_acc
-    diff_std = np.sqrt(local_std**2 + global_std**2) #sqrt(a^2 + b^2) check?
+    diff_std = np.sqrt(local_std**2 + global_std**2) #error(a-b) = sqrt(a^2 + b^2)
     p_glob_idx = [0,2,3,4,5,6,7,9]
 
     ax2.axhline(y=0, color = "gray", linestyle="--", linewidth=1.5, alpha=0.3)
     ax2.fill_between(p_local, diff-diff_std, diff+diff_std, alpha=0.1, color = 'blue')
     ax2.plot(p_local, diff, 'o-', color = "blue", linewidth=2, markersize=8, label="Heart Disease Dataset")
-    ax2.set_xlabel('Local Depolarising Noise Probability', fontsize=22) #dual axis
+    ax2.set_xlabel('Local Depolarising Noise Probability', fontsize=22)
     ax2.grid(True)
-    ax2_top = ax2.twiny()
+    ax2_top = ax2.twiny() #dual axis
     ax2_top.set_xlim(ax2.get_xlim())
     ax2_top.set_xticks(p_local[p_glob_idx])
     ax2_top.set_xticklabels([f"{p_global[i]:.2f}" for i in p_glob_idx])
     ax2_top.set_xlabel("Equivalent Global Depolarising Noise", fontsize=22)
     ax2.legend(fontsize=16)
 
+    #Wine Dataset (3 qubits, 1 layer)
     data = wine_3N1L
     p_local = np.array([d[0] for d in data])
 
@@ -73,12 +78,11 @@ def plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers):
 
     diff = global_acc - local_acc
     diff_std = np.sqrt(local_std**2 + global_std**2)
-    p_glob_idx = [0,1,2,4,6,8, 10, 11]
+    p_glob_idx = [0,1,2,4,6,8, 10, 11] #display selective values for p_global for visual purposes
 
     ax3.axhline(y=0, color = "gray", linestyle="--", linewidth=1.5, alpha=0.3)
     ax3.fill_between(p_local, diff-diff_std, diff+diff_std, alpha=0.1, color = 'blue')
     ax3.plot(p_local, diff, 'o-', color = "blue", linewidth=2, markersize=8, label="Wine Dataset (N=3,L=1)")
-
     ax3.grid(True)
     ax3.legend(fontsize=16, loc='upper left')
     ax3_top = ax3.twiny()
@@ -86,8 +90,6 @@ def plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers):
 
     ax3_top.set_xticks(p_local[p_glob_idx])
     ax3_top.set_xticklabels([f"{p_global[i]:.2f}" for i in p_glob_idx])
-    print(p_local)
-
 
     ax1.tick_params(labelsize=18)
     ax2.tick_params(labelsize=18)
@@ -102,9 +104,13 @@ def plot_local_global(heart_data, wine_2N1L, wine_3N1L,n, n_layers):
 
 
 def plot_upper_bound(p_local_list,heart_margin, heart_upper, gaus_margin, gaus_upper, bc_margin, bc_upper, wineL1_margin, wineL1_upper, wineL2_margin, wineL2_upper):
-
+    """
+    Reproduces plots from paper depicting the theoretical margin values
+    computed using the upper bound and the actual noisy margin values 
+    for visual comparison for various datasets
+    """
     fig, axes = plt.subplots(1,5, figsize=(15,4), sharex=True)
-    print(axes.shape)
+    
     axes[0].plot(p_local_list, heart_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[0].plot(p_local_list, heart_upper,'o--', linewidth=2, markersize=6, label = "Upper Bound", color = "red")
     axes[0].set_ylabel("Margin", fontsize=12)
@@ -116,19 +122,16 @@ def plot_upper_bound(p_local_list,heart_margin, heart_upper, gaus_margin, gaus_u
     axes[1].grid(True, linestyle=":", linewidth = 0.5)
     axes[1].tick_params(labelsize=10)
 
-
     axes[2].plot(p_local_list, bc_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[2].plot(p_local_list, bc_upper,'o--', linewidth=2, markersize=6, label = "Upper Bound", color = "red")
     axes[2].grid(True, linestyle=":", linewidth = 0.5)
     axes[2].tick_params(labelsize=10)
 
-    
     axes[3].plot(p_local_list, wineL1_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[3].plot(p_local_list, wineL1_upper,'o--', linewidth=2, markersize=6, label = "Upper Bound", color = "red")
     axes[3].grid(True, linestyle=":", linewidth = 0.5)
     axes[3].tick_params(labelsize=10)
 
-    
     axes[4].plot(p_local_list, wineL2_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[4].plot(p_local_list, wineL2_upper,'o--', linewidth=2, markersize=6, label = "Upper Bound", color = "red")
     axes[4].grid(True, linestyle=":", linewidth = 0.5)
@@ -155,13 +158,17 @@ def plot_upper_bound(p_local_list,heart_margin, heart_upper, gaus_margin, gaus_u
                 fontsize=10, verticalalignment='top', 
                 bbox=dict(boxstyle='round', alpha=0.5))
 
-
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.15) 
+    plt.show()
 
 
 def plot_lower_bound(p_local_list,heart_margin, heart_lower, gaus_margin, gaus_lower, bc_margin, bc_lower, wineL1_margin, wineL1_lower, wineL2_margin, wineL2_lower):
-
+    """
+    Reproduces plots from paper depicting the theoretical margin values
+    computed using the lower bound and the actual noisy margin values 
+    for visual comparison for various datasets
+    """
     fig, axes = plt.subplots(1,5, figsize=(15,4), sharex=True)
     print(axes.shape)
     axes[0].plot(p_local_list, heart_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
@@ -170,25 +177,20 @@ def plot_lower_bound(p_local_list,heart_margin, heart_lower, gaus_margin, gaus_l
     axes[0].grid(True, linestyle=":", linewidth = 0.5)
     axes[0].tick_params(labelsize=10)
 
-    
     axes[1].plot(p_local_list, gaus_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[1].plot(p_local_list, gaus_lower,'o--', linewidth=2, markersize=6, label = "Lower Bound", color = "black")
     axes[1].grid(True, linestyle=":", linewidth = 0.5)
     axes[1].tick_params(labelsize=10)
-
-    
 
     axes[2].plot(p_local_list, bc_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[2].plot(p_local_list, bc_lower,'o--', linewidth=2, markersize=6, label = "Lower Bound", color = "black")
     axes[2].grid(True, linestyle=":", linewidth = 0.5)
     axes[2].tick_params(labelsize=10)
 
-
     axes[3].plot(p_local_list, wineL1_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[3].plot(p_local_list, wineL1_lower,'o--', linewidth=2, markersize=6, label = "Lower Bound", color = "black")
     axes[3].grid(True, linestyle=":", linewidth = 0.5)
     axes[3].tick_params(labelsize=10)
-
     
     axes[4].plot(p_local_list, wineL2_margin, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
     axes[4].plot(p_local_list, wineL2_lower,'o--', linewidth=2, markersize=6, label = "Lower Bound", color = "black")
@@ -216,47 +218,46 @@ def plot_lower_bound(p_local_list,heart_margin, heart_lower, gaus_margin, gaus_l
                 fontsize=10, verticalalignment='top', 
                 bbox=dict(boxstyle='round', alpha=0.5))
 
-
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.15)
+    plt.show()
 
 
 def plot_boxplots(htru2_df, wine_df, heart_df, gaus_df):
-    
+    """
+    Reproduces plots from paper comparing boxplots highlighting
+    the median (per-sample) geometric margin obtained for 
+    three corruption levels for four datasets
+    """
     fig,axes = plt.subplots(1,4, figsize=(14,6), sharex=True)
 
-    #GeometricMargin
+    #HTRU2 Dataset
     sns.boxplot(x = "corruption_levels", y ="geometric_margin", data = htru2_df, ax = axes[0], palette= "viridis", showfliers=False )
     axes[0].set_xlabel("", fontsize = 14)
     axes[0].set_ylabel("Median Geometric Margin", fontsize = 14)
     axes[0].set_title("(a)", loc="left")
     axes[0].grid(True, linewidth=0.5, linestyle = ":")
-    axes[1].grid(True, linewidth=0.5, linestyle = ":")
 
-    axes[2].grid(True, linewidth=0.5, linestyle = ":")
-    axes[3].grid(True, linewidth=0.5, linestyle = ":")
-
-    #GeometricMargin
+    #Wine Dataset
     sns.boxplot(x = "corruption_levels", y ="geometric_margin", data = wine_df, ax = axes[1], palette= "viridis", showfliers=False )
     axes[1].set_xlabel("", fontsize = 14, loc="right")
     axes[1].set_ylabel("", fontsize = 14)
     axes[1].set_title("(b)", loc="left")
     axes[1].grid(True, linewidth=0.5, linestyle = ":")
 
-    #GeometricMargin
+    #Heart Disease Dataset
     sns.boxplot(x = "corruption_levels", y ="geometric_margin", data = heart_df, ax = axes[2], palette= "viridis", showfliers=False )
     axes[2].set_xlabel("", fontsize = 14)
     axes[2].set_ylabel("", fontsize = 14)
     axes[2].set_title("(c)", loc="left")
     axes[2].grid(True, linewidth=0.5, linestyle = ":")
 
-    #GeometricMargin
+    #Gaussian Dataset
     sns.boxplot(x = "corruption_levels", y ="geometric_margin", data = gaus_df, ax = axes[3], palette= "viridis", showfliers=False )
     axes[3].set_xlabel("", fontsize = 14)
     axes[3].set_ylabel("", fontsize = 14)
     axes[3].set_title("(d)", loc="left")
     axes[3].grid(True, linewidth=0.5, linestyle = ":")
-
 
     axes[0].text(0.76, 0.986, 'HTRU2', transform = axes[0].transAxes,
                 fontsize=10, verticalalignment='top', 
@@ -273,11 +274,14 @@ def plot_boxplots(htru2_df, wine_df, heart_df, gaus_df):
 
     fig.text(0.53, 0.005, 'Corruption Fraction', ha='center', va='center', fontsize=14)
     plt.tight_layout()
-
     plt.show()
 
 def dual_plot(htru2_acc, htru2_std, htru2_geom_margin, wine_acc, wine_std, wine_geom_margin, heart_acc, heart_std, heart_geom_margin, gaus_acc, gaus_std, gaus_geom_margin):
-
+    """
+    Reproduces plots from paper highlighting
+    the decay in test accuracy and median geometric margin
+    with increasing corruption levels for four datasets
+    """
     fig,axes = plt.subplots(1,4, figsize=(14,6))
     corr_levels = [0,0.1,0.25,0.5,0.6,0.75,1.0]
 
@@ -352,16 +356,21 @@ def dual_plot(htru2_acc, htru2_std, htru2_geom_margin, wine_acc, wine_std, wine_
     plt.show()
 
 def acc_margin_plot(htru2_acc, htru2_geom_margin, wine_acc, wine_geom_margin, heart_acc, heart_geom_margin, gaus_acc, gaus_geom_margin):
-
+    """
+    Reproduces plots from paper highlighting
+    the linear correlation between test accuracy and 
+    median geometric margins using four datasets
+    """
     fig,axes = plt.subplots(1,4, figsize=(14,6))
     axes[0].scatter(htru2_geom_margin, htru2_acc ,color='steelblue', edgecolors = 'black', s=50, alpha=0.7, label="HTRU2 Dataset")
 
-    r,p = pearsonr(htru2_geom_margin, htru2_acc)
+    r,p = pearsonr(htru2_geom_margin, htru2_acc) #calculate the Pearson correlation coefficient
 
     #trend line
     z = np.polyfit(htru2_geom_margin, htru2_acc, 1)
     trend_line  = np.poly1d(z)
     print(trend_line)
+
     axes[0].plot(htru2_geom_margin, trend_line(htru2_geom_margin), "r--", alpha=0.8, linewidth=2, label='Linear fit')
     axes[0].text(0.65, 0.06, f'r={r:.4f}', transform = axes[0].transAxes,
                 fontsize=14, verticalalignment='top', 
@@ -423,4 +432,43 @@ def acc_margin_plot(htru2_acc, htru2_geom_margin, wine_acc, wine_geom_margin, he
     axes[3].legend()
 
     plt.tight_layout()
+    plt.show()
+
+
+def ibm_plots(p_local_list_upper, noisy_margin_upper, upper_bound_arr, p_local_list_lower, noisy_margin_lower, lower_bound_arr, ibm_margin):
+    """
+    Reproduces plots from paper depicting the upper and lower bound values
+    with the simulated noisy margin for increasing noise values for comparison
+    with the noisy margin value obtained using real quantum hardware
+    """
+    fig, axes = plt.subplots(1,2, figsize=(15,4), sharex=False)
+    print(axes.shape)
+    axes[0].plot(p_local_list_upper, noisy_margin_upper, 's-', linewidth=2, markersize=6, color = "blue")
+    axes[0].plot(p_local_list_upper, upper_bound_arr,'o--', linewidth=2, markersize=6, label = "Upper Bound", color = "red")
+    axes[0].axhline(y=ibm_margin,color = 'green', linestyle='--', linewidth = 2)
+    axes[0].set_ylabel("Margin", fontsize=12)
+    axes[0].grid(True, linestyle=":", linewidth = 0.5)
+    axes[0].tick_params(labelsize=10)
+
+
+    axes[1].plot(p_local_list_lower, noisy_margin_lower, 's-', linewidth=2, markersize=6, label = 'Empirical Margin', color = "blue")
+    axes[1].plot(p_local_list_lower, lower_bound_arr,'o--', linewidth=2, markersize=6, label = "Lower Bound", color = "black")
+    axes[1].axhline(y=ibm_margin,color = 'green', linestyle='--', linewidth = 2, label = 'ibm_strasbourg')
+    axes[1].grid(True, linestyle=":", linewidth = 0.5)
+    axes[1].tick_params(labelsize=10)
+
+    axes[1].text(0.73, 0.95, 'Breast Cancer (Subset)', transform = axes[1].transAxes,
+                fontsize=10, verticalalignment='top', 
+                bbox=dict(boxstyle='round', alpha=0.5))
+
+    handles1, labels1 = axes[0].get_legend_handles_labels()
+    handles2, labels2 = axes[1].get_legend_handles_labels()
+    fig.legend(handles1+handles2, labels1+labels2, bbox_to_anchor = (0.49, 0.96),
+            ncol = 1, fontsize = 11, frameon
+            =True)
+
+    fig.text(0.5, 0.02, 'Local Depolarising Noise', ha='center', fontsize = 13)
+
+    plt.tight_layout()
+    plt.subplots_adjust(bottom=0.15)
     plt.show()

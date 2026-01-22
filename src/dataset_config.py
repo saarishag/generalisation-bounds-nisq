@@ -5,13 +5,14 @@ from ucimlrepo import fetch_ucirepo
 from sklearn.impute import SimpleImputer
 from sklearn.datasets import make_blobs
 
-#Heart Disease Dataset
-
 def define_heart_dataset():
-    
+    """
+    Fetches and prepares (preprocesses) Heart Disease Dataset 
+    and defines various parameters for binary classification problem 
+    """
     n=2
     n_layers = 1
-    embedding = IQPEmbedding
+    embedding = IQPEmbedding #define embedding used for the (Pennylane) quantum circuit
     p_local_list = [0, 0.05, 0.1, 0.2, 0.3, 0.375, 0.5, 0.6, 0.7, 0.75 ]
 
     #fetch heart disease dataset
@@ -23,6 +24,7 @@ def define_heart_dataset():
 
     #variable information
     y_binary = np.where(y['num']>0, 1, 0) #x,y -> x returned if True, y returned if False
+    
     #Convert to DataFrame
     y_binary = pd.DataFrame(y_binary, columns = ['heart_disease'])
 
@@ -43,10 +45,12 @@ def define_heart_dataset():
 
     return X_subset, y_subset, n, n_layers, embedding, p_local_list
 
-#Heart Disease Dataset
 
 def define_wine_dataset():
-
+    """
+    Fetches and prepares (preprocesses) (White) Wine Quality Dataset 
+    and defines various parameters for binary classification problem 
+    """
     n=2 #can be changed 
     n_layers = 1
     embedding = IQPEmbedding
@@ -72,10 +76,13 @@ def define_wine_dataset():
     return X_subset, y_subset, n, n_layers, embedding, p_local_list
 
 def define_gaussian_dataset():
+    """
+    Fetches and prepares (preprocesses) synthetic Gaussian Dataset 
+    and defines various parameters for binary classification problem 
+    """
     n=2 #can be changed 
     n_layers = 1
     embedding = IQPEmbedding
-
     p_local_list = [0, 0.05, 0.1, 0.25, 0.375, 0.5, 0.75] #p_values used for C range test
     
     def create_gaussians_with_overlap(cluster_stdev = 3.0, n_samples = 500, random_state = 42):
@@ -84,7 +91,7 @@ def define_gaussian_dataset():
         Larger cluster_stdev = More overlap = Less separable
         """
 
-        centers = [[-2,-2], [2,2]]
+        centers = [[-2,-2], [2,2]] #define centers of the gaussian distributions (blobs)
         X,y = make_blobs(n_samples=n_samples, centers = centers, 
                         cluster_std=cluster_stdev, random_state=random_state)
         return X,y
@@ -92,7 +99,11 @@ def define_gaussian_dataset():
     X_subset,y_subset = create_gaussians_with_overlap()
     return X_subset, y_subset, n, n_layers, embedding, p_local_list
 
-def define_BC_dataset():
+def define_BC_dataset(start, stop):
+    """
+    Fetches and prepares (preprocesses) Breast Cancer Dataset 
+    and defines various parameters for binary classification problem 
+    """
     n=2 #can be changed 
     n_layers = 1
     embedding = IQPEmbedding
@@ -112,7 +123,9 @@ def define_BC_dataset():
     y_binary = np.where(y=='M', 1, 0)
     y_binary = pd.DataFrame(y_binary, columns = ['Diagnosis'])
 
-    X_subset = np.array(X[:])
-    y_subset = np.array(y_binary[:])
+    X_subset = np.array(X[start:stop])
+    y_subset = np.array(y_binary[start:stop])
     
     return X_subset, y_subset, n, n_layers, embedding, p_local_list
+
+
